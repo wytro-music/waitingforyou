@@ -253,7 +253,9 @@
 	  <img src="cover.jpg" alt="Cover artwork" class="cover-image">
 	  
 	  <div class="play-overlay">
-		▶
+	    <svg viewBox="0 0 24 24" width="80" height="80" fill="white">
+		  <polygon points="8,5 19,12 8,19" />
+	    </svg>
 	  </div>
 
 	  <audio id="player" src="/preview.mp3"></audio>
@@ -333,6 +335,20 @@
       window.location = spotifyAppUri;
     });
   </script>
+  
+  <script>
+  const card = document.querySelector('.cover-card');
+  const audio = document.getElementById('player');
+
+  card.addEventListener('click', () => {
+    if (audio.paused) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  });
+	</script>
+
 </body>
 </html>
 
