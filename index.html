@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wytro – Waiting for you</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --accent: #1db954;
+      --accent-soft: #1ed760;
+      --text-main: #ffffff;
+      --text-muted: #d1d5db;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem 1.2rem;
+      position: relative;
+      overflow-x: hidden;
+
+      /* Background image in the repo */
+      background: url("background.jpg") center center / cover no-repeat fixed;
+    }
+
+    /* Dark overlay */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: -1;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 1.4rem 1.3rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.1rem;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.28rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(250,250,250,0.4);
+      font-size: 0.7rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(30,215,96,0.7);
+    }
+
+    .cover-card {
+      width: 100%;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow:
+        0 14px 32px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(255,255,255,0.06);
+    }
+
+    .cover-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .subtitle span.title {
+      color: var(--accent-soft);
+      font-weight: 600;
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      width: 100%;
+      margin-top: 0.4rem;
+    }
+
+    .btn {
+      padding: 0.85rem 1.2rem;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      width: 100%;
+      transition:
+        transform 0.08s ease,
+        box-shadow 0.12s ease,
+        background 0.12s ease,
+        border-color 0.12s ease,
+        color 0.12s ease;
+      gap: 0.45rem;
+    }
+
+    .icon-img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+    }
+
+    .btn span.icon {
+      font-size: 1.1rem;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #000;
+      box-shadow: 0 10px 24px rgba(30,215,96,0.55);
+    }
+
+    .btn-primary:hover {
+      box-shadow:
+        0 0 18px rgba(30,215,96,0.9),
+        0 14px 28px rgba(0,0,0,0.9);
+      filter: brightness(1.03);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.04);
+      color: var(--text-muted);
+      border: 1px solid rgba(255,255,255,0.22);
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.08);
+      color: #e5e7eb;
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.985);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.8);
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    .footer {
+      margin-top: 0.8rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      align-items: center;
+    }
+
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(209,213,219,0.7);
+      padding-bottom: 1px;
+    }
+
+    .footer a:hover {
+      color: #e5e7eb;
+      border-bottom-style: solid;
+    }
+
+    @media (min-width: 768px) {
+      body {
+        padding: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <div class="badge">
+      <span class="badge-dot"></span>
+      <span>New single out November 8, 2025</span>
+    </div>
+
+    <div class="cover-card">
+      <!-- Cover image file in the same folder -->
+      <img src="cover.jpg" alt="Cover artwork">
+    </div>
+
+    <h1>WYTRO</h1>
+
+    <p class="subtitle">
+      Wytro is an Italian producer blending melodic EDM, modern italo dance and pop-dance hybrids—built around catchy vocal hooks, iconic leads and club-ready grooves. From emotional, progressive builds to fast 138 BPM dancefloor energy and playful summer tracks, Wytro’s focus is always the same: instant impact, clean production, and melodies people remember.
+      Single <span class="title">“Waiting for you”</span> out March 6, 2026.
+    </p>
+
+    <div class="buttons">
+
+      <!-- SPOTIFY APP -->
+      <button class="btn btn-primary" id="spotifyAppBtn">
+        <img src="icon-spotifyapp.png" class="icon-img" alt="">
+        <span>Listen on Spotify (app)</span>
+      </button>
+
+
+      <!-- SPOTIFY WEB -->
+      <a class="btn btn-secondary" href="https://open.spotify.com/track/5XV9cxGl6EkmnspSBmDnf8">
+        <img src="icon-spotify.png" class="icon-img" alt="">
+        <span>Listen on Spotify (web)</span>
+      </a>
+
+
+      <!-- DEEZER -->
+      <a class="btn btn-secondary" href="https://www.deezer.com/it/album/831049421">
+        <img src="icon-deezer.png" class="icon-img" alt="">
+        <span>Listen on Deezer</span>
+      </a>
+
+
+      <!-- APPLE MUSIC -->
+      <a class="btn btn-secondary" href="https://music.apple.com/us/album/welcome-to-the-system-cup-single/1844003614">
+        <img src="icon-apple.png" class="icon-img" alt="">
+        <span>Listen on Apple Music</span>
+      </a>
+
+
+      <!-- AMAZON MUSIC -->
+      <a class="btn btn-secondary" href="https://music.amazon.in/albums/B0FTKX8TNQ">
+        <img src="icon-amazon.png" class="icon-img" alt="">
+        <span>Listen on Amazon Music</span>
+      </a>
+
+
+      <!-- YOUTUBE -->
+      <a class="btn btn-secondary" href="https://youtu.be/h0RzYJAYiaM?si=3HEotJD8gglZR4xH">
+        <img src="icon-youtube.png" class="icon-img" alt="">
+        <span>Listen on YouTube</span>
+      </a>
+
+
+    </div>
+
+    <div class="hint">
+      If your browser asks for permission to open Spotify, confirm to launch the app.
+    </div>
+
+    <div class="footer">
+      <div>© 2025 Wytro – All rights reserved.</div>
+
+      <!-- Sostituisci l’URL artista con quello reale quando lo hai -->
+      <a href="https://www.instagram.com/wytro.music/">
+        <img src="icon-instagram.png" class="icon-img" alt="">
+        <span>Visit Wytro on Instagram</span>
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    const spotifyAppUri = "spotify:track:5XV9cxGl6EkmnspSBmDnf8";
+
+    document.getElementById("spotifyAppBtn").addEventListener("click", () => {
+      window.location = spotifyAppUri;
+    });
+  </script>
+</body>
+</html>
+
+
+
+
