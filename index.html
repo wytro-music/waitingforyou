@@ -30,11 +30,9 @@
       position: relative;
       overflow-x: hidden;
 
-      /* Background image in the repo */
       background: url("background.jpg") center center / cover no-repeat fixed;
     }
 
-    /* Dark overlay */
     body::after {
       content: "";
       position: fixed;
@@ -79,6 +77,7 @@
       box-shadow: 0 0 10px rgba(30,215,96,0.7);
     }
 
+    /* ✅ FIX: position: relative per ancorare l'overlay alla cover */
     .cover-card {
       width: 100%;
       border-radius: 18px;
@@ -86,34 +85,52 @@
       box-shadow:
         0 14px 32px rgba(0,0,0,0.9),
         0 0 0 1px rgba(255,255,255,0.06);
+
+      position: relative;     /* <-- fondamentale */
+      cursor: pointer;
     }
 
-	.cover-image {
-	  width: 100%;
-	  display: block;
-	}
-
-	.play-overlay {
-	  position: absolute;
-	  top: 50%;
-	  left: 50%;
-	  transform: translate(-50%, -50%);
-	  
-	  font-size: 60px;
-	  color: white;
-	  opacity: 0;
-	  transition: opacity 0.3s ease;
-	  pointer-events: none;
-	}
-
-	.cover-card:hover .play-overlay {
-	  opacity: 1;
-	}
-	
-    .cover-card img {
-      display: block;
+    .cover-image {
       width: 100%;
+      display: block;
       height: auto;
+    }
+
+    /* ✅ Overlay che copre tutta l'immagine e centra l'icona */
+    .play-overlay {
+      position: absolute;
+      inset: 0; /* top/right/bottom/left: 0 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(0,0,0,0.20);
+      opacity: 0;
+      transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    /* icona */
+    .play-overlay svg {
+      width: 84px;
+      height: 84px;
+      filter: drop-shadow(0 0 18px rgba(30,215,96,0.45));
+      transform: scale(0.98);
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    .cover-card:hover .play-overlay {
+      opacity: 1;
+      background: rgba(0,0,0,0.30);
+    }
+
+    .cover-card:hover .play-overlay svg {
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 22px rgba(30,215,96,0.70));
+    }
+
+    /* opzionale: overlay sempre visibile su mobile (no hover) */
+    @media (hover: none) {
+      .play-overlay { opacity: 1; }
     }
 
     h1 {
@@ -127,11 +144,6 @@
       font-size: 0.95rem;
       color: var(--text-muted);
       line-height: 1.5;
-    }
-
-    .subtitle span.title {
-      color: var(--accent-soft);
-      font-weight: 600;
     }
 
     .buttons {
@@ -167,11 +179,6 @@
       width: 26px;
       height: 26px;
       object-fit: contain;
-    }
-
-    .btn span.icon {
-      font-size: 1.1rem;
-      display: inline-block;
     }
 
     .btn-primary {
@@ -234,9 +241,7 @@
     }
 
     @media (min-width: 420px) {
-      body {
-        padding: 2rem;
-      }
+      body { padding: 2rem; }
     }
   </style>
 </head>
@@ -249,67 +254,61 @@
       <span>New single out March 6, 2026</span>
     </div>
 
-	<div class="cover-card">
-	  <img src="cover.jpg" alt="Cover artwork" class="cover-image">
-	  
-	  <div class="play-overlay">
-	    <svg viewBox="0 0 24 24" width="80" height="80" fill="white">
-		  <polygon points="8,5 19,12 8,19" />
-	    </svg>
-	  </div>
+    <div class="cover-card" id="coverCard" aria-label="Play preview" role="button" tabindex="0">
+      <img src="cover.jpg" alt="Cover artwork" class="cover-image">
 
-	  <audio id="player" src="/preview.mp3"></audio>
-	</div>
+      <div class="play-overlay" id="playOverlay" aria-hidden="true">
+        <!-- Default: PLAY icon -->
+        <svg id="playIcon" viewBox="0 0 24 24" fill="white">
+          <polygon points="8,5 19,12 8,19"></polygon>
+        </svg>
+
+        <!-- Hidden initially: PAUSE icon -->
+        <svg id="pauseIcon" viewBox="0 0 24 24" fill="white" style="display:none;">
+          <rect x="7" y="5" width="3" height="14"></rect>
+          <rect x="14" y="5" width="3" height="14"></rect>
+        </svg>
+      </div>
+
+      <audio id="player" src="/preview.mp3" preload="none"></audio>
+    </div>
+
     <h1>WYTRO</h1>
 
     <p class="subtitle">
-      Wytro is an Italian producer blending melodic EDM, modern italo dance and pop-dance hybrids—built around catchy vocal hooks, iconic leads and club-ready grooves.<br>From emotional, progressive builds to fast 138 BPM dancefloor energy and playful summer tracks, Wytro’s focus is always the same: instant impact, clean production, and melodies people remember.
-   </p>
+      Wytro is an Italian producer blending melodic EDM, modern italo dance and pop-dance hybrids, built around catchy vocal hooks, iconic leads and club-ready grooves. From emotional, progressive builds to fast 138 BPM dancefloor energy and playful summer tracks, Wytro’s focus is always the same: instant impact, clean production, and melodies people remember.
+    </p>
 
     <div class="buttons">
-
-      <!-- SPOTIFY APP -->
       <button class="btn btn-primary" id="spotifyAppBtn">
         <img src="icon-spotifyapp.png" class="icon-img" alt="">
         <span>Listen on Spotify (app)</span>
       </button>
 
-
-      <!-- SPOTIFY WEB -->
       <a class="btn btn-secondary" href="https://open.spotify.com/track/5XV9cxGl6EkmnspSBmDnf8">
         <img src="icon-spotify.png" class="icon-img" alt="">
         <span>Listen on Spotify (web)</span>
       </a>
 
-
-      <!-- DEEZER -->
       <a class="btn btn-secondary" href="https://www.deezer.com/it/album/831049421">
         <img src="icon-deezer.png" class="icon-img" alt="">
         <span>Listen on Deezer</span>
       </a>
 
-
-      <!-- APPLE MUSIC -->
       <a class="btn btn-secondary" href="https://music.apple.com/us/album/welcome-to-the-system-cup-single/1844003614">
         <img src="icon-apple.png" class="icon-img" alt="">
         <span>Listen on Apple Music</span>
       </a>
 
-
-      <!-- AMAZON MUSIC -->
       <a class="btn btn-secondary" href="https://music.amazon.in/albums/B0FTKX8TNQ">
         <img src="icon-amazon.png" class="icon-img" alt="">
         <span>Listen on Amazon Music</span>
       </a>
 
-
-      <!-- YOUTUBE -->
       <a class="btn btn-secondary" href="https://youtu.be/h0RzYJAYiaM?si=3HEotJD8gglZR4xH">
         <img src="icon-youtube.png" class="icon-img" alt="">
         <span>Listen on YouTube</span>
       </a>
-
-
     </div>
 
     <div class="hint">
@@ -319,7 +318,6 @@
     <div class="footer">
       <div>© 2025 Wytro – All rights reserved.</div>
 
-      <!-- Sostituisci l’URL artista con quello reale quando lo hai -->
       <a href="https://www.instagram.com/wytro.music/">
         <img src="icon-instagram.png" class="icon-img" alt="">
         <span>Visit Wytro on Instagram</span>
@@ -330,28 +328,44 @@
 
   <script>
     const spotifyAppUri = "spotify:track:5XV9cxGl6EkmnspSBmDnf8";
-
     document.getElementById("spotifyAppBtn").addEventListener("click", () => {
       window.location = spotifyAppUri;
     });
   </script>
-  
-  <script>
-  const card = document.querySelector('.cover-card');
-  const audio = document.getElementById('player');
 
-  card.addEventListener('click', () => {
-    if (audio.paused) {
-      audio.play();
-    } else {
-      audio.pause();
+  <script>
+    const card = document.getElementById('coverCard');
+    const audio = document.getElementById('player');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+
+    function syncIcon() {
+      const isPlaying = !audio.paused;
+      playIcon.style.display = isPlaying ? 'none' : 'block';
+      pauseIcon.style.display = isPlaying ? 'block' : 'none';
     }
-  });
-	</script>
+
+    function togglePlay() {
+      if (audio.paused) audio.play();
+      else audio.pause();
+    }
+
+    card.addEventListener('click', togglePlay);
+
+    // accessibilità: ENTER/SPACE
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        togglePlay();
+      }
+    });
+
+    audio.addEventListener('play', syncIcon);
+    audio.addEventListener('pause', syncIcon);
+    audio.addEventListener('ended', syncIcon);
+
+    syncIcon();
+  </script>
 
 </body>
 </html>
-
-
-
-
