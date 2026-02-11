@@ -244,17 +244,6 @@
       body { padding: 2rem; }
     }
   </style>
-  
-	<!-- Google tag (gtag.js) -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-XPDTDW1YS7"></script>
-	<script>
-	  window.dataLayer = window.dataLayer || [];
-	  function gtag(){dataLayer.push(arguments);}
-	  gtag('js', new Date());
-
-	  gtag('config', 'G-XPDTDW1YS7');
-	</script>
-  
 </head>
 
 <body>
@@ -389,6 +378,24 @@
 	  (async () => {
 		try {
 		  const data = await loadData();
+
+		// =============================
+		// GOOGLE ANALYTICS DINAMICO
+		// =============================
+
+		if (data.googleAnalyticsId) {
+		  const script = document.createElement('script');
+		  script.async = true;
+		  script.src = `https://www.googletagmanager.com/gtag/js?id=${data.googleAnalyticsId}`;
+		  document.head.appendChild(script);
+
+		  window.dataLayer = window.dataLayer || [];
+		  function gtag(){dataLayer.push(arguments);}
+		  window.gtag = gtag;
+
+		  gtag('js', new Date());
+		  gtag('config', data.googleAnalyticsId);
+		}
 
 		  // badge date
 		  document.getElementById('releaseDate').textContent = data.releaseDate;
