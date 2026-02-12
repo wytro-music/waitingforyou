@@ -329,13 +329,6 @@
   </div>
 
 	<script>
-		const spotifyAppUri = "spotify:track:5XV9cxGl6EkmnspSBmDnf8";
-		document.getElementById("spotifyAppBtn").addEventListener("click", () => {
-			window.location = spotifyAppUri;
-		});
-	</script>
-
-	<script>
 		const card = document.getElementById('coverCard');
 		const audio = document.getElementById('player');
 		const playIcon = document.getElementById('playIcon');
@@ -368,6 +361,40 @@
 
 		syncIcon();
 	</script>
+
+	<script>
+	  function trackAndOpen({ eventName, params, url, newTab = true }) {
+		// Se GA non è pronto, apri e basta
+		if (typeof window.gtag !== 'function') {
+		  if (url) newTab ? window.open(url, '_blank', 'noopener') : (window.location.href = url);
+		  return;
+		}
+
+		let navigated = false;
+		const go = () => {
+		  if (navigated) return;
+		  navigated = true;
+		  if (url) newTab ? window.open(url, '_blank', 'noopener') : (window.location.href = url);
+		};
+
+		window.gtag('event', eventName, { ...params, event_callback: go });
+		setTimeout(go, 250);
+	  }
+
+	  function bindOutbound(el, platformName) {
+		if (!el) return;
+		el.addEventListener('click', (e) => {
+		  e.preventDefault();
+		  trackAndOpen({
+			eventName: 'outbound_click',
+			params: { platform: platformName, link_url: el.href },
+			url: el.href,
+			newTab: true
+		  });
+		});
+	  }
+	</script>
+
 
 	<script>
 		async function loadData() {
@@ -425,12 +452,13 @@
 				const youtube = document.getElementById('youtubeLink');
 				const instagram = document.querySelector('.footer a'); // se è l'unico link nel footer
 
-				spotifyWeb.href = data.spotifyWeb;
-				deezer.href = data.deezer;
-				apple.href = data.appleMusic;
-				amazon.href = data.amazonMusic;
-				youtube.href = data.youtube;
-				instagram.href = data.instagram;
+				// Set href (solo se esistono)
+				if (spotifyWeb) spotifyWeb.href = data.spotifyWeb ?? '#';
+				if (deezer) deezer.href = data.deezer ?? '#';
+				if (apple) apple.href = data.appleMusic ?? '#';
+				if (amazon) amazon.href = data.amazonMusic ?? '#';
+				if (youtube) youtube.href = data.youtube ?? '#';
+				if (instagram && data.instagram) instagram.href = data.instagram;
 
 				bindOutbound(spotifyWeb, 'spotify_web');
 				bindOutbound(deezer, 'deezer');
@@ -439,20 +467,21 @@
 				bindOutbound(youtube, 'youtube');
 				bindOutbound(instagram, 'instagram');
 		
+				// Spotify app click
 				const spotifyAppBtn = document.getElementById('spotifyAppBtn');
-				spotifyAppBtn.addEventListener('click', (e) => {
-					e.preventDefault();
-					trackAndOpen({
-						eventName: 'spotify_app_open',
-						params: { platform: 'spotify_app', link_url: data.spotifyAppUri },
-						url: data.spotifyAppUri,
-						newTab: false
+				if (spotifyAppBtn) {
+					spotifyAppBtn.addEventListener('click', (e) => {
+						e.preventDefault();
+						trackAndOpen({
+							eventName: 'spotify_app_open',
+							params: { platform: 'spotify_app', link_url: data.spotifyAppUri },
+							url: data.spotifyAppUri,
+							newTab: false
+						});
 					});
-				});
-
+				}
 			} catch (e) {
-			  console.error(e);
-			  // fallback: lascia i valori statici o mostra un messaggio
+				console.error(e);
 			}
 		})();
 	</script>
