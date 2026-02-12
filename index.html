@@ -384,17 +384,31 @@
 		// =============================
 
 		if (data.googleAnalyticsId) {
+		  // 1) prepara dataLayer + gtag SEMPRE in modo safe
+		  window.dataLayer = window.dataLayer || [];
+		  window.gtag = function () { window.dataLayer.push(arguments); };
+
+		  // 2) carica lo script e aspetta che sia pronto
 		  const script = document.createElement('script');
 		  script.async = true;
-		  script.src = `https://www.googletagmanager.com/gtag/js?id=${data.googleAnalyticsId}`;
+		  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(data.googleAnalyticsId)}`;
+
+		  script.onload = () => {
+			// init quando lo script è effettivamente caricato
+			window.gtag('js', new Date());
+			window.gtag('config', data.googleAnalyticsId, {
+			  send_page_view: true
+			});
+
+			// debug minimo
+			console.log('GA4 inizializzato:', data.googleAnalyticsId);
+		  };
+
+		  script.onerror = () => {
+			console.warn('GA4: script non caricato (adblock, rete, CSP, ecc.)');
+		  };
+
 		  document.head.appendChild(script);
-
-		  window.dataLayer = window.dataLayer || [];
-		  function gtag(){dataLayer.push(arguments);}
-		  window.gtag = gtag;
-
-		  gtag('js', new Date());
-		  gtag('config', data.googleAnalyticsId);
 		}
 
 		  // badge date
