@@ -447,26 +447,31 @@
       // ===== Spotify app button =====
       const spotifyAppBtn = document.getElementById('spotifyAppBtn');
       if (spotifyAppBtn) {
-        console.log('[bind] spotifyAppBtn OK');
+		console.log('[bind] spotifyAppBtn OK');
 
         spotifyAppBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+			e.preventDefault();
+			e.stopPropagation();
 
-          const uri = data.spotifyAppUri;
-          console.log('[spotifyAppUri]', uri);
+			const uri = data.spotifyAppUri;
+			console.log('[spotifyAppUri]', uri);
 
-          if (!uri) {
-            console.warn('spotifyAppUri mancante in data.json');
-            return;
-          }
+			if (!uri) {
+				console.warn('spotifyAppUri mancante in data.json');
+				return;
+			}
 
-          trackAndOpen({
-            eventName: 'spotify_app_open',
-            params: { platform: 'spotify_app', link_url: uri },
-            url: uri,
-            newTab: false
-          });
+			// Traccia e NON bloccare l’apertura app
+			if (typeof window.gtag === 'function') {
+				window.gtag('event', 'spotify_app_open', {
+					platform: 'spotify_app',
+					link_url: uri,
+					transport_type: 'beacon'
+				});
+			}
+			
+			// Apri l’app IMMEDIATAMENTE (no delay, no window.open)
+			window.location.href = uri;
         }, true);
       } else {
         console.warn('[bind] spotifyAppBtn NON trovato');
