@@ -369,33 +369,6 @@
     return res.json();
   }
 
-  function track(eventName, params = {}) {
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', eventName, params);
-      console.log('[GA] event:', eventName, params);
-    } else {
-      console.warn('[GA] gtag non pronto, evento perso:', eventName, params);
-    }
-  }
-
-  function trackAndOpen({ eventName, params, url, newTab = true }) {
-    if (typeof window.gtag !== 'function') {
-      // GA non pronto: apri e basta
-      if (url) newTab ? window.open(url, '_blank', 'noopener') : (window.location.href = url);
-      return;
-    }
-
-    let done = false;
-    const go = () => {
-      if (done) return;
-      done = true;
-      if (url) newTab ? window.open(url, '_blank', 'noopener') : (window.location.href = url);
-    };
-
-    window.gtag('event', eventName, { ...params, event_callback: go });
-    setTimeout(go, 250);
-  }
-
   function bindOutbound(el, platformName) {
     if (!el) {
       console.warn('[bindOutbound] elemento mancante per', platformName);
@@ -505,6 +478,67 @@
   });
 </script>
 
+<script>
+  function trackOutboundAndOpen(url, platform, newTab = true) {
+    // Se GA non è pronto, apri e basta
+    if (typeof window.gtag !== 'function') {
+      if (newTab) window.open(url, '_blank', 'noopener');
+      else window.location.href = url;
+      return;
+    }
+
+    let opened = false;
+    const openLink = () => {
+      if (opened) return;
+      opened = true;
+      if (newTab) window.open(url, '_blank', 'noopener');
+      else window.location.href = url;
+    };
+
+    // GA4 outbound click
+    window.gtag('event', 'outbound_click', {
+      platform,
+      link_url: url,
+      transport_type: 'beacon',   // importante per invio in uscita pagina
+      event_callback: openLink
+    });
+
+    // fallback: non bloccare l’utente
+    setTimeout(openLink, 250);
+  }
+
+  function bindOutbound(id, platform) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener('click', (e) => {
+      // questo è IL punto: senza preventDefault l’evento spesso non parte
+      e.preventDefault();
+      e.stopPropagation();
+
+      const url = el.href;
+      trackOutboundAndOpen(url, platform, true);
+    }, true);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    bindOutbound('spotifyWebLink', 'spotify_web');
+    bindOutbound('deezerLink', 'deezer');
+    bindOutbound('appleMusicLink', 'apple_music');
+    bindOutbound('amazonMusicLink', 'amazon_music');
+    bindOutbound('youtubeLink', 'youtube');
+
+    // Instagram (se hai id, meglio; altrimenti lascia così)
+    const ig = document.querySelector('.footer a');
+    if (ig) {
+      ig.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        trackOutboundAndOpen(ig.href, 'instagram', true);
+      }, true);
+    }
+  });
+</script>
 
 
 </body>
