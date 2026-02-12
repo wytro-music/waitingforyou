@@ -362,129 +362,149 @@
 		syncIcon();
 	</script>
 
-	<script>
-	  function trackAndOpen({ eventName, params, url, newTab = true }) {
-		// Se GA non è pronto, apri e basta
-		if (typeof window.gtag !== 'function') {
-		  if (url) newTab ? window.open(url, '_blank', 'noopener') : (window.location.href = url);
-		  return;
-		}
+<script>
+  async function loadData() {
+    const res = await fetch('data.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`data.json not found (${res.status})`);
+    return res.json();
+  }
 
-		let navigated = false;
-		const go = () => {
-		  if (navigated) return;
-		  navigated = true;
-		  if (url) newTab ? window.open(url, '_blank', 'noopener') : (window.location.href = url);
-		};
+  function track(eventName, params = {}) {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, params);
+      console.log('[GA] event:', eventName, params);
+    } else {
+      console.warn('[GA] gtag non pronto, evento perso:', eventName, params);
+    }
+  }
 
-		window.gtag('event', eventName, { ...params, event_callback: go });
-		setTimeout(go, 250);
-	  }
+  function trackAndOpen({ eventName, params, url, newTab = true }) {
+    if (typeof window.gtag !== 'function') {
+      // GA non pronto: apri e basta
+      if (url) newTab ? window.open(url, '_blank', 'noopener') : (window.location.href = url);
+      return;
+    }
 
-	  function bindOutbound(el, platformName) {
-		if (!el) return;
-		el.addEventListener('click', (e) => {
-		  e.preventDefault();
-		  trackAndOpen({
-			eventName: 'outbound_click',
-			params: { platform: platformName, link_url: el.href },
-			url: el.href,
-			newTab: true
-		  });
-		});
-	  }
-	</script>
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      if (url) newTab ? window.open(url, '_blank', 'noopener') : (window.location.href = url);
+    };
 
+    window.gtag('event', eventName, { ...params, event_callback: go });
+    setTimeout(go, 250);
+  }
 
-	<script>
-		async function loadData() {
-			const res = await fetch('data.json', { cache: 'no-store' });
-			if (!res.ok) throw new Error(`data.json not found (${res.status})`);
-			return res.json();
-		}
+  function bindOutbound(el, platformName) {
+    if (!el) {
+      console.warn('[bindOutbound] elemento mancante per', platformName);
+      return;
+    }
 
-		(async () => {
-			try {
-				const data = await loadData();
+    // Log per verificare che il bind avvenga davvero
+    console.log('[bindOutbound] OK:', platformName, '->', el.id);
 
-				// =============================
-				// GOOGLE ANALYTICS DINAMICO
-				// =============================
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-				if (data.googleAnalyticsId) {
-					console.log("GA ID dal JSON:", data.googleAnalyticsId);
+      const url = el.href;
+      trackAndOpen({
+        eventName: 'outbound_click',
+        params: { platform: platformName, link_url: url },
+        url,
+        newTab: true
+      });
+    }, true);
+  }
 
-					window.dataLayer = window.dataLayer || [];
-					window.gtag = function () { window.dataLayer.push(arguments); };
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const data = await loadData();
 
-					const script = document.createElement('script');
-					script.async = true;
-					script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(data.googleAnalyticsId)}`;
+      // ===== GA dinamico (se proprio lo vuoi così) =====
+      if (data.googleAnalyticsId) {
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){ window.dataLayer.push(arguments); };
 
-					script.onload = () => {
-						console.log("GA script caricato");
+        const gaScript = document.createElement('script');
+        gaScript.async = true;
+        gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(data.googleAnalyticsId)}`;
 
-						window.gtag('js', new Date());
-						window.gtag('config', data.googleAnalyticsId, { send_page_view: true });
+        gaScript.onload = () => {
+          window.gtag('js', new Date());
+          window.gtag('config', data.googleAnalyticsId, { send_page_view: true });
+          track('test_event', { source: 'domcontentloaded' });
+        };
 
-						// Evento di test per essere sicuri al 100%
-						window.gtag('event', 'test_event', { source: 'manual' });
-						console.log("GA config + test_event inviati");
-					};
+        gaScript.onerror = () => console.warn('GA script NON caricato (adblock/privacy/rete)');
+        document.head.appendChild(gaScript);
+      } else {
+        console.warn('googleAnalyticsId mancante in data.json');
+      }
 
-					script.onerror = () => {
-						console.warn("GA script NON caricato (adblock/privacy/rete)");
-					};
+      // ===== Contenuti =====
+      const rd = document.getElementById('releaseDate');
+      if (rd) rd.textContent = data.releaseDate ?? '—';
 
-					document.head.appendChild(script);
-				} else {
-					console.warn("googleAnalyticsId mancante nel JSON");
-				}
+      // ===== Link =====
+      const spotifyWeb = document.getElementById('spotifyWebLink');
+      const deezer = document.getElementById('deezerLink');
+      const apple = document.getElementById('appleMusicLink');
+      const amazon = document.getElementById('amazonMusicLink');
+      const youtube = document.getElementById('youtubeLink');
+      const instagram = document.querySelector('.footer a');
 
-				// badge date
-				document.getElementById('releaseDate').textContent = data.releaseDate;
+      if (spotifyWeb) spotifyWeb.href = data.spotifyWeb ?? '#';
+      if (deezer) deezer.href = data.deezer ?? '#';
+      if (apple) apple.href = data.appleMusic ?? '#';
+      if (amazon) amazon.href = data.amazonMusic ?? '#';
+      if (youtube) youtube.href = data.youtube ?? '#';
+      if (instagram && data.instagram) instagram.href = data.instagram;
 
-				// Set href
-				const spotifyWeb = document.getElementById('spotifyWebLink');
-				const deezer = document.getElementById('deezerLink');
-				const apple = document.getElementById('appleMusicLink');
-				const amazon = document.getElementById('amazonMusicLink');
-				const youtube = document.getElementById('youtubeLink');
-				const instagram = document.querySelector('.footer a'); // se è l'unico link nel footer
+      // ===== Tracking click =====
+      bindOutbound(spotifyWeb, 'spotify_web');
+      bindOutbound(deezer, 'deezer');
+      bindOutbound(apple, 'apple_music');
+      bindOutbound(amazon, 'amazon_music');
+      bindOutbound(youtube, 'youtube');
+      bindOutbound(instagram, 'instagram');
 
-				// Set href (solo se esistono)
-				if (spotifyWeb) spotifyWeb.href = data.spotifyWeb ?? '#';
-				if (deezer) deezer.href = data.deezer ?? '#';
-				if (apple) apple.href = data.appleMusic ?? '#';
-				if (amazon) amazon.href = data.amazonMusic ?? '#';
-				if (youtube) youtube.href = data.youtube ?? '#';
-				if (instagram && data.instagram) instagram.href = data.instagram;
+      // ===== Spotify app button =====
+      const spotifyAppBtn = document.getElementById('spotifyAppBtn');
+      if (spotifyAppBtn) {
+        console.log('[bind] spotifyAppBtn OK');
 
-				bindOutbound(spotifyWeb, 'spotify_web');
-				bindOutbound(deezer, 'deezer');
-				bindOutbound(apple, 'apple_music');
-				bindOutbound(amazon, 'amazon_music');
-				bindOutbound(youtube, 'youtube');
-				bindOutbound(instagram, 'instagram');
-		
-				// Spotify app click
-				const spotifyAppBtn = document.getElementById('spotifyAppBtn');
-				if (spotifyAppBtn) {
-					spotifyAppBtn.addEventListener('click', (e) => {
-						e.preventDefault();
-						trackAndOpen({
-							eventName: 'spotify_app_open',
-							params: { platform: 'spotify_app', link_url: data.spotifyAppUri },
-							url: data.spotifyAppUri,
-							newTab: false
-						});
-					});
-				}
-			} catch (e) {
-				console.error(e);
-			}
-		})();
-	</script>
+        spotifyAppBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const uri = data.spotifyAppUri;
+          console.log('[spotifyAppUri]', uri);
+
+          if (!uri) {
+            console.warn('spotifyAppUri mancante in data.json');
+            return;
+          }
+
+          trackAndOpen({
+            eventName: 'spotify_app_open',
+            params: { platform: 'spotify_app', link_url: uri },
+            url: uri,
+            newTab: false
+          });
+        }, true);
+      } else {
+        console.warn('[bind] spotifyAppBtn NON trovato');
+      }
+
+    } catch (err) {
+      console.error('Errore init:', err);
+    }
+  });
+</script>
+
 
 
 </body>
