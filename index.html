@@ -444,42 +444,45 @@
       bindOutbound(youtube, 'youtube');
       bindOutbound(instagram, 'instagram');
 
-      // ===== Spotify app button =====
-      const spotifyAppBtn = document.getElementById('spotifyAppBtn');
-      if (spotifyAppBtn) {
-		console.log('[bind] spotifyAppBtn OK');
-
-        spotifyAppBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-
-			const uri = data.spotifyAppUri;
-			console.log('[spotifyAppUri]', uri);
-
-			if (!uri) {
-				console.warn('spotifyAppUri mancante in data.json');
-				return;
-			}
-
-			// Traccia e NON bloccare l’apertura app
-			if (typeof window.gtag === 'function') {
-				window.gtag('event', 'spotify_app_open', {
-					platform: 'spotify_app',
-					link_url: uri,
-					transport_type: 'beacon'
-				});
-			}
-			
-			// Apri l’app IMMEDIATAMENTE (no delay, no window.open)
-			window.location.href = uri;
-        }, true);
-      } else {
-        console.warn('[bind] spotifyAppBtn NON trovato');
-      }
 
     } catch (err) {
       console.error('Errore init:', err);
     }
+  });
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const res = await fetch('data.json', { cache: 'no-store' });
+    const data = await res.json();
+
+    const btn = document.getElementById('spotifyAppBtn');
+    if (!btn) return;
+
+    const uri = data.spotifyAppUri;
+    if (!uri) {
+      console.warn('spotifyAppUri mancante in data.json');
+      return;
+    }
+
+    // 1) Traccia PRIMA (quando il dito/mouse scende)
+    btn.addEventListener('pointerdown', () => {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'spotify_app_open', {
+          platform: 'spotify_app',
+          link_url: uri,
+          transport_type: 'beacon'
+        });
+        // opzionale debug
+        // console.log('[GA] spotify_app_open beacon queued');
+      }
+    }, { passive: true });
+
+    // 2) Apri l’app al click (subito, senza delay, senza window.open)
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = uri;
+    }, true);
   });
 </script>
 
