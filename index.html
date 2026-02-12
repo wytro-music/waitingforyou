@@ -383,33 +383,36 @@
 		// GOOGLE ANALYTICS DINAMICO
 		// =============================
 
-		if (data.googleAnalyticsId) {
-		  // 1) prepara dataLayer + gtag SEMPRE in modo safe
-		  window.dataLayer = window.dataLayer || [];
-		  window.gtag = function () { window.dataLayer.push(arguments); };
+if (data.googleAnalyticsId) {
+  console.log("GA ID dal JSON:", data.googleAnalyticsId);
 
-		  // 2) carica lo script e aspetta che sia pronto
-		  const script = document.createElement('script');
-		  script.async = true;
-		  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(data.googleAnalyticsId)}`;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { window.dataLayer.push(arguments); };
 
-		  script.onload = () => {
-			// init quando lo script è effettivamente caricato
-			window.gtag('js', new Date());
-			window.gtag('config', data.googleAnalyticsId, {
-			  send_page_view: true
-			});
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(data.googleAnalyticsId)}`;
 
-			// debug minimo
-			console.log('GA4 inizializzato:', data.googleAnalyticsId);
-		  };
+  script.onload = () => {
+    console.log("GA script caricato");
 
-		  script.onerror = () => {
-			console.warn('GA4: script non caricato (adblock, rete, CSP, ecc.)');
-		  };
+    window.gtag('js', new Date());
+    window.gtag('config', data.googleAnalyticsId, { send_page_view: true });
 
-		  document.head.appendChild(script);
-		}
+    // Evento di test per essere sicuri al 100%
+    window.gtag('event', 'test_event', { source: 'manual' });
+    console.log("GA config + test_event inviati");
+  };
+
+  script.onerror = () => {
+    console.warn("GA script NON caricato (adblock/privacy/rete)");
+  };
+
+  document.head.appendChild(script);
+} else {
+  console.warn("googleAnalyticsId mancante nel JSON");
+}
+
 
 		  // badge date
 		  document.getElementById('releaseDate').textContent = data.releaseDate;
