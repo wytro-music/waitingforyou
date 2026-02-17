@@ -246,6 +246,16 @@
 		  body { padding: 2rem; }
 		}
 	</style>
+	
+	<!-- Google Analytics (GA4) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-8FYY9CFR2W"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+	  gtag('config', 'G-8FYY9CFR2W');
+	</script>
+	
 </head>
 
 <body>
@@ -397,27 +407,6 @@
     try {
       const data = await loadData();
 
-      // ===== GA dinamico (se proprio lo vuoi così) =====
-      if (data.googleAnalyticsId) {
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function(){ window.dataLayer.push(arguments); };
-
-        const gaScript = document.createElement('script');
-        gaScript.async = true;
-        gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(data.googleAnalyticsId)}`;
-
-        gaScript.onload = () => {
-          window.gtag('js', new Date());
-          window.gtag('config', data.googleAnalyticsId, { send_page_view: true });
-          track('test_event', { source: 'domcontentloaded' });
-        };
-
-        gaScript.onerror = () => console.warn('GA script NON caricato (adblock/privacy/rete)');
-        document.head.appendChild(gaScript);
-      } else {
-        console.warn('googleAnalyticsId mancante in data.json');
-      }
-
       // ===== Contenuti =====
       const rd = document.getElementById('releaseDate');
       if (rd) rd.textContent = data.releaseDate ?? '—';
@@ -453,64 +442,31 @@
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', async () => {
-    const res = await fetch('data.json', { cache: 'no-store' });
-    const data = await res.json();
-
-    const btn = document.getElementById('spotifyAppBtn');
-    if (!btn) return;
-
-    const uri = data.spotifyAppUri; // spotify:track:...
-    if (!uri) return;
-
-    // 1) Track il prima possibile (pressione dito/mouse)
-    btn.addEventListener('pointerdown', () => {
-      if (typeof window.gtag === 'function') {
-        window.gtag('event', 'spotify_app_open', {
-          platform: 'spotify_app',
-          link_url: uri,
-          transport_type: 'beacon'
-        });
-      }
-    }, { passive: true });
-
-    // 2) Apri app subito sul click
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      // niente delay, niente window.open
-      window.location.href = uri;
-    }, true);
-  });
-</script>
-
-
-<script>
   function trackOutboundAndOpen(url, platform, newTab = true) {
-    // Se GA non è pronto, apri e basta
+    // se GA non è pronto, apri e basta
     if (typeof window.gtag !== 'function') {
       if (newTab) window.open(url, '_blank', 'noopener');
       else window.location.href = url;
       return;
     }
 
-    let opened = false;
-    const openLink = () => {
-      if (opened) return;
-      opened = true;
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
       if (newTab) window.open(url, '_blank', 'noopener');
       else window.location.href = url;
     };
 
-    // GA4 outbound click
-    window.gtag('event', 'outbound_click', {
-      platform,
+    gtag('event', 'outbound_click', {
+      platform: platform,
       link_url: url,
-      transport_type: 'beacon',   // importante per invio in uscita pagina
-      event_callback: openLink
+      transport_type: 'beacon',
+      event_callback: go
     });
 
-    // fallback: non bloccare l’utente
-    setTimeout(openLink, 250);
+    // fallback per non bloccare l’utente
+    setTimeout(go, 250);
   }
 
   function bindOutbound(id, platform) {
@@ -518,12 +474,9 @@
     if (!el) return;
 
     el.addEventListener('click', (e) => {
-      // questo è IL punto: senza preventDefault l’evento spesso non parte
       e.preventDefault();
       e.stopPropagation();
-
-      const url = el.href;
-      trackOutboundAndOpen(url, platform, true);
+      trackOutboundAndOpen(el.href, platform, true);
     }, true);
   }
 
@@ -533,9 +486,10 @@
     bindOutbound('appleMusicLink', 'apple_music');
     bindOutbound('amazonMusicLink', 'amazon_music');
     bindOutbound('youtubeLink', 'youtube');
+    bindOutbound('amazonMusicLink', 'amazon_music');
 
-    // Instagram (se hai id, meglio; altrimenti lascia così)
-    const ig = document.querySelector('.footer a');
+    // Instagram (se vuoi: dai un id al link instagram, es: id="instagramLink")
+    const ig = document.getElementById('instagramLink');
     if (ig) {
       ig.addEventListener('click', (e) => {
         e.preventDefault();
@@ -543,9 +497,24 @@
         trackOutboundAndOpen(ig.href, 'instagram', true);
       }, true);
     }
+
+    // Spotify APP (deep link): tracking best-effort + apertura immediata
+    const appBtn = document.getElementById('spotifyAppBtn');
+    if (appBtn) {
+      appBtn.addEventListener('click', () => {
+        // evento (non blocchiamo)
+        if (typeof window.gtag === 'function') {
+          gtag('event', 'spotify_app_open', {
+            platform: 'spotify_app',
+            transport_type: 'beacon'
+          });
+        }
+        // apri app (metti qui il tuo deep link)
+        window.location.href = 'spotify:track:5XV9cxGl6EkmnspSBmDnf8';
+      }, true);
+    }
   });
 </script>
-
 
 </body>
 </html>
